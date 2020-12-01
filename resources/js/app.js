@@ -5,9 +5,9 @@
  */
 require('./bootstrap');
 
-import Vue from 'vue'
-import App from './components/App'
+window.Vue = require('vue')
 import router from './router'
+import App from './components/App'
 import ViewUI from 'view-design';
 
 // Import IView UI plugin for Vue
@@ -21,8 +21,8 @@ Vue.mixin(common)
 Vue.component('App', require('./components/App.vue').default)
 const app = new Vue({
     el: '#app',
+    router,
     components: {
         App
-    },
-    router
+    }
 });

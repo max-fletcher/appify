@@ -10,7 +10,8 @@ import Methods from './components/pages/basic/methods'
 
 //project pages
 import Home from './components/pages/home'
-import Tags from './components/tags'
+import Tags from './admin/pages/tags'
+import Category from './admin/pages/category'
 
 
 const routes = [{
@@ -23,6 +24,10 @@ const routes = [{
     {
         path: '/tags',
         component: Tags
+    },
+    {
+        path: '/category',
+        component: Category
     },
 
 
