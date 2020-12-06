@@ -2030,6 +2030,18 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //import methodsVue from './pages/basic/methods.vue'
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
@@ -2050,7 +2062,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       deleteData: {},
       index: -1,
       deletingIndex: -1,
-      token: ''
+      token: '',
+      fileStored: false
     };
   },
   methods: {
@@ -2187,7 +2200,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     showEditModal: function showEditModal(tag, index) {
-      // Using an intermediate array to store so that the background list is not updated when typing into the edit tag input box We 
+      // Using an intermediate array to store so that the background list is not updated when typing into the edit tag input box. We 
       // basically don't want to pass say this.editData = tag since the tag will be passed by reference and any changes to tag will 
       // cause the background tagName to change. So we are copying the tag into obj then passing obj as reference to the editData variable
       var obj = {
@@ -2204,8 +2217,11 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       this.deletingIndex = index;
     },
     handleSuccess: function handleSuccess(response, file) {
-      // If upload is iview file uploader is successful
+      // If upload in iview file uploader is successful
       this.data.iconImage = response;
+      this.data.iconImage = '/uploads/' + this.data.iconImage;
+      this.fileStored = true;
+      console.log(this.data.iconImage);
     },
     handleFormatError: function handleFormatError(file) {
       // If file format specified in upload modal doesn't match the desired format
@@ -2214,6 +2230,13 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     handleMaxSize: function handleMaxSize(file) {
       // If file size specified in upload modal doesn't match the desired size
       this.warningN('Exceeding file size limit', 'File  ' + file.name + ' is too large, no more than 2M.');
+    },
+    handleError: function handleError(response, file) {
+      // If upload in iview file uploader has errors, show first error(error with zero index in array, else, "show something is wrong")
+      this.warningN('The File Format Is Incorrect', file.errors.file.length ? file.errors.file[0] : 'Something Went Wrong !!');
+    },
+    handleRemove: function handleRemove(file, fileList) {
+      this.fileStored = false;
     }
   },
   created: function created() {
@@ -2225,7 +2248,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              console.log("Catrgory page created"); // get csrf token from meta tag inside the head of welcome.blade.php
+              console.log("Category page created"); // get csrf token from meta tag inside the head of welcome.blade.php
 
               _this4.token = window.Laravel.csrfToken; //get all categories to show before the component/page is rendered
 
@@ -85803,13 +85826,18 @@ var render = function() {
                   ref: "uploads",
                   attrs: {
                     type: "drag",
-                    headers: { "x-csrf-token": _vm.token },
+                    headers: {
+                      "x-csrf-token": _vm.token,
+                      "X-Requested-With": "XMLHttpRequest"
+                    },
                     "on-success": _vm.handleSuccess,
+                    "on-error": _vm.handleError,
                     format: ["jpg", "jpeg", "png"],
-                    "max-size": 2048,
                     "on-format-error": _vm.handleFormatError,
+                    "max-size": 2048,
                     "on-exceeded-size": _vm.handleMaxSize,
-                    action: "/app/upload"
+                    "on-remove": _vm.handleRemove,
+                    action: "/app/upload_image"
                   }
                 },
                 [
@@ -85828,6 +85856,14 @@ var render = function() {
                   )
                 ]
               ),
+              _vm._v(" "),
+              _vm.fileStored
+                ? _c("div", { staticClass: "demo-upload-list" }, [
+                    _c("img", { attrs: { src: this.data.iconImage } }),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "demo-upload-list-cover" })
+                  ])
+                : _vm._e(),
               _vm._v(" "),
               _c("Input", {
                 attrs: { placeholder: "Add Category Name" },

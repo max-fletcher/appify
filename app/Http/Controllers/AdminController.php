@@ -45,6 +45,10 @@ class AdminController extends Controller
     }
 
     public function upload(){
+        // validate request
+        $this->validate( request(), [
+            'file' => 'required|mimes:jpeg,jpg,png',
+        ]);
         // assign a filename to the uploaded file in request
         $picName = time().'.'.request()->file->extension();
         // store a file in the uploads folder

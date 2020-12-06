@@ -42,26 +42,38 @@
 					v-model="addModal"
 					title="Add Category"										
 					>
-					<!-- :headers is for attaching csrf token from the script tag in welcome.blade.php. The rest below is for bound variables
-					that are used for uploading images using iviewui -->
+<!-- :headers is for attaching csrf token from the script tag in welcome.blade.php and for defining request types(XML Http, otherwise the data sent will
+redirect you to the same page instead of returning a response as JSON). The rest below is for bound variables that are used for front-end validation
+uploading images using iviewui. The on-success is triggered when the file is uploaded without any validation errors from the backend.
+The on-error is triggered when a validation error reaches the front-end. -->
                     <Upload  
 						ref="uploads"                      
                         type="drag"						
-						:headers="{'x-csrf-token' : token}"
-						:on-success="handleSuccess"						
+						:headers="{'x-csrf-token' : token, 'X-Requested-With' : 'XMLHttpRequest'}"
+						:on-success="handleSuccess"
+						:on-error="handleError"
 						:format="['jpg','jpeg','png']"
-						:max-size="2048"
 						:on-format-error="handleFormatError"
+						:max-size="2048"
 						:on-exceeded-size="handleMaxSize"
-                        action="/app/upload">
+						:on-remove="handleRemove"
+                        action="/app/upload_image">
 
                         <div style="padding: 20px 0">
                             <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
                             <p>Click or drag files here to upload</p>
                         </div>	
                     </Upload>
+					<!-- If imageIcon has a url(string), then show image. -->
+					<div class="demo-upload-list" v-if="fileStored">				
+					<!-- When an image is uploaded, its relative path is stored in data.iconImage variable. So you can summon it here like this. -->
+							<img :src="this.data.iconImage" />
+						<div class="demo-upload-list-cover">
+							<!-- <Icon type="ios-trash-outline" @click="deleteImage"></Icon> -->
+						</div>		
+					</div>
 
-					<Input v-model="data.categoryName" placeholder="Add Category Name"  />
+					<Input v-model="data.categoryName" placeholder="Add Category Name" />
 					<div slot="footer">
 						<Button type="default" @click="addModal=false">Close</Button>
 						<Button type="primary" @click="addCategory" :disabled="isAdding" :loading="isAdding">{{isAdding ? 'Adding...' : 'Add tag'}}</Button>
@@ -123,7 +135,8 @@ export default {
 			deleteData: {},
 			index: -1,
 			deletingIndex: -1,
-			token: ''
+			token: '',
+			fileStored: false,
 		}
 	},
 
@@ -180,10 +193,10 @@ export default {
 				}
 				this.isDeleting = false
 				this.deleteModal = false		
-			},			
+			},
 
 			showEditModal(tag ,index){			
-	// Using an intermediate array to store so that the background list is not updated when typing into the edit tag input box We 
+	// Using an intermediate array to store so that the background list is not updated when typing into the edit tag input box. We 
 	// basically don't want to pass say this.editData = tag since the tag will be passed by reference and any changes to tag will 
 	// cause the background tagName to change. So we are copying the tag into obj then passing obj as reference to the editData variable
 				let obj = {
@@ -192,7 +205,7 @@ export default {
 				}
 				this.editData = obj
 				this.editModal = true
-				this.index = index				
+				this.index = index					
 			},
 
 			showDeleteModal(tag ,index){		
@@ -201,9 +214,12 @@ export default {
 				this.deletingIndex = index
 			},
 
-			 handleSuccess (response, file) {
-                // If upload is iview file uploader is successful
+			handleSuccess (response, file) {
+                // If upload in iview file uploader is successful
 				this.data.iconImage = response
+				this.data.iconImage = '/uploads/'+this.data.iconImage
+				this.fileStored = true
+				console.log(this.data.iconImage)				
             },
             handleFormatError (file) {
 				// If file format specified in upload modal doesn't match the desired format
@@ -213,10 +229,17 @@ export default {
 				// If file size specified in upload modal doesn't match the desired size
                 this.warningN( 'Exceeding file size limit', 'File  ' + file.name + ' is too large, no more than 2M.');
             },
+			handleError (response, file) {
+                // If upload in iview file uploader has errors, show first error(error with zero index in array, else, "show something is wrong")
+				this.warningN( 'The File Format Is Incorrect', file.errors.file.length ? file.errors.file[0] : 'Something Went Wrong !!');
+			},
+			handleRemove(file, fileList){
+				this.fileStored= false
+			}
 	},
 
 	async created(){		
-		console.log("Catrgory page created")
+		console.log("Category page created")
 		// get csrf token from meta tag inside the head of welcome.blade.php
 		this.token = window.Laravel.csrfToken
 		//get all categories to show before the component/page is rendered
